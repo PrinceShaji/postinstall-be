@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id         String       @id @default(cuid())
+  name       String
+  email      String       @unique
+  password   String
+  isAdmin    Boolean      @default(false)
+  createdAt  DateTime     @default(now())
+  UserConfig UserConfig[]
+}
+
+model OperatingSystem {
+  id         String       @id @default(cuid())
+  title      String
+  code       String       @unique
+  version    String
+  UserConfig UserConfig[]
+  Softwares  Softwares[]
+}
+
+model Wallpaper {
+  id         String       @id @default(uuid())
+  name       String
+  source_url String?      @default("")
+  author     String?
+  license    String?
+  image_url  String
+  UserConfig UserConfig[]
+}
+
+model Softwares {
+  id                String             @id @default(cuid())
+  name              String
+  thumbnail         String?
+  os                OperatingSystem    @relation(fields: [operatingSystemId], references: [id])
+  operatingSystemId String
+  SoftwareVariants  SoftwareVariants[]
+}
+
+model SoftwareVariants {
+  id                  String       @id @default(cuid())
+  name                String
+  version             String
+  isDirectInstall     Boolean
+  packages            String[]
+  preInstallCommands  String[]
+  installCommands     String[]
+  postinstallCOmmands String[]
+  userConfig          UserConfig[]
+  parent              Softwares    @relation(fields: [softwaresId], references: [id])
+  softwaresId         String
+}
+
+model SoftwarePlugins {
+  id String @id @default(cuid())
+}
+
+model UserConfig {
+  id                String             @id @default(uuid())
+  user              Users              @relation(fields: [usersId], references: [id])
+  os                OperatingSystem    @relation(fields: [operatingSystemId], references: [id])
+  operatingSystemId String
+  wallpaper         Wallpaper?         @relation(fields: [wallpaperId], references: [id])
+  wallpaperId       String
+  usersId           String
+  softwares         SoftwareVariants[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
